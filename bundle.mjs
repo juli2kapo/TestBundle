@@ -39,420 +39,483 @@
         }
 
         injectStyles() {
-            const style = document.createElement('style');
-            style.textContent = `
-                /* Chat Widget Styles */
-                #elykia-chat-widget * {
-                    margin: 0;
-                    padding: 0;
-                    box-sizing: border-box;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                }
+    // Check if styles are already injected
+    if (document.getElementById('elykia-chat-styles')) {
+        return;
+    }
 
-                #elykia-chat-widget {
-                    position: fixed;
-                    ${this.config.position === 'bottom-left' ? 'left: 1.5rem;' : 'right: 1.5rem;'}
-                    bottom: 1.5rem;
-                    z-index: 2147483647;
-                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-                }
+    const style = document.createElement('style');
+    style.id = 'elykia-chat-styles';
+    style.type = 'text/css';
+    
+    // Import Inter font if not already available
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap';
+    fontLink.rel = 'stylesheet';
+    if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Inter"]')) {
+        document.head.appendChild(fontLink);
+    }
 
-                .elykia-chat-toggle {
-                    width: 48px;
-                    height: 48px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%);
-                    border: none;
-                    cursor: pointer;
-                    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    position: relative;
-                }
-
-                .elykia-chat-toggle:hover {
-                    transform: translateY(-2px) scale(1.05);
-                    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45);
-                }
-
-                .elykia-chat-toggle svg {
-                    width: 20px;
-                    height: 20px;
-                    color: white;
-                    transition: all 0.3s ease;
-                }
-
-                .elykia-chat-toggle .elykia-close-icon {
-                    position: absolute;
-                    opacity: 0;
-                    transform: rotate(90deg);
-                }
-
-                .elykia-chat-toggle.active .elykia-chat-icon {
-                    opacity: 0;
-                    transform: rotate(-90deg);
-                }
-
-                .elykia-chat-toggle.active .elykia-close-icon {
-                    opacity: 1;
-                    transform: rotate(0deg);
-                }
-
-                .elykia-chat-window {
-                    position: absolute;
-                    bottom: 60px;
-                    ${this.config.position === 'bottom-left' ? 'left: 0;' : 'right: 0;'}
-                    width: 340px;
-                    height: 460px;
-                    background: white;
-                    border-radius: 18px;
-                    box-shadow: 
-                        0 10px 30px rgba(0, 0, 0, 0.08),
-                        0 0 0 1px rgba(0, 0, 0, 0.02);
-                    display: flex;
-                    flex-direction: column;
-                    overflow: hidden;
-                    opacity: 0;
-                    transform: translateY(15px) scale(0.95);
-                    visibility: hidden;
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                .elykia-chat-window.active {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                    visibility: visible;
-                }
-
-                .elykia-chat-header {
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%);
-                    padding: 1rem 1.25rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    color: white;
-                    position: relative;
-                    z-index: 10;
-                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-                }
-
-                .elykia-header-content {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.75rem;
-                }
-
-                .elykia-avatar {
-                    width: 34px;
-                    height: 34px;
-                    background: rgba(255, 255, 255, 0.2);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .elykia-avatar svg {
-                    width: 16px;
-                    height: 16px;
-                }
-
-                .elykia-header-info h3 {
-                    font-size: 0.95rem;
-                    font-weight: 600;
-                    margin-bottom: 0.15rem;
-                    letter-spacing: -0.2px;
-                }
-
-                .elykia-status {
-                    font-size: 0.75rem;
-                    opacity: 0.9;
-                    font-weight: 400;
-                }
-
-                .elykia-minimize-btn {
-                    background: none;
-                    border: none;
-                    color: white;
-                    cursor: pointer;
-                    padding: 0.4rem;
-                    border-radius: 8px;
-                    transition: all 0.2s ease;
-                }
-
-                .elykia-minimize-btn:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                }
-
-                .elykia-minimize-btn svg {
-                    width: 18px;
-                    height: 18px;
-                }
-
-                .elykia-messages-container {
-                    flex: 1;
-                    padding: 1.25rem;
-                    overflow-y: auto;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 0.8rem;
-                    background: #fafcff;
-                }
-
-                .elykia-messages-container::-webkit-scrollbar {
-                    width: 5px;
-                }
-
-                .elykia-messages-container::-webkit-scrollbar-thumb {
-                    background: #dbeafe;
-                    border-radius: 3px;
-                }
-
-                .elykia-messages-container::-webkit-scrollbar-track {
-                    background: rgba(219, 234, 254, 0.3);
-                }
-
-                .elykia-welcome-message {
-                    display: flex;
-                    gap: 0.8rem;
-                    align-items: flex-start;
-                }
-
-                .elykia-bot-avatar {
-                    width: 32px;
-                    height: 32px;
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%);
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    flex-shrink: 0;
-                    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
-                }
-
-                .elykia-bot-avatar svg {
-                    width: 16px;
-                    height: 16px;
-                    color: white;
-                }
-
-                .elykia-message-content {
-                    flex: 1;
-                }
-
-                .elykia-message-content p {
-                    background: white;
-                    padding: 0.8rem 1.1rem;
-                    border-radius: 14px 14px 14px 4px;
-                    margin-bottom: 0.8rem;
-                    color: #1e293b;
-                    line-height: 1.45;
-                    font-size: 0.9rem;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-                }
-
-                .elykia-quick-actions {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 0.4rem;
-                }
-
-                .elykia-quick-btn {
-                    background: white;
-                    border: 1px solid #e2e8f0;
-                    padding: 0.4rem 0.8rem;
-                    border-radius: 16px;
-                    font-size: 0.8rem;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    color: #334155;
-                    font-weight: 500;
-                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-                }
-
-                .elykia-quick-btn:hover {
-                    border-color: #bae6fd;
-                    background: #f0f9ff;
-                    color: #0c4a6e;
-                    transform: translateY(-1px);
-                }
-
-                .elykia-message {
-                    display: flex;
-                    gap: 0.8rem;
-                    margin-bottom: 0.8rem;
-                    animation: elykiaFadeIn 0.3s ease-out;
-                }
-
-                .elykia-message.user {
-                    flex-direction: row-reverse;
-                }
-
-                .elykia-message.user .elykia-message-bubble {
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%);
-                    color: white;
-                    border-radius: 14px 14px 4px 14px;
-                    box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
-                }
-
-                .elykia-message.bot .elykia-message-bubble {
-                    background: white;
-                    color: #1e293b;
-                    border-radius: 14px 14px 14px 4px;
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-                }
-
-                .elykia-message-bubble {
-                    max-width: 80%;
-                    padding: 0.8rem 1.1rem;
-                    line-height: 1.45;
-                    font-size: 0.9rem;
-                    transition: all 0.2s ease;
-                }
-
-                .elykia-typing-indicator {
-                    display: flex;
-                    align-items: center;
-                    gap: 0.8rem;
-                    padding: 0 1.25rem 0.8rem;
-                    color: #64748b;
-                    font-size: 0.8rem;
-                }
-
-                .elykia-typing-dots {
-                    display: flex;
-                    gap: 4px;
-                }
-
-                .elykia-typing-dots span {
-                    width: 5px;
-                    height: 5px;
-                    background: #94a3b8;
-                    border-radius: 50%;
-                    animation: elykiaTyping 1.4s infinite;
-                }
-
-                .elykia-typing-dots span:nth-child(2) {
-                    animation-delay: 0.2s;
-                }
-
-                .elykia-typing-dots span:nth-child(3) {
-                    animation-delay: 0.4s;
-                }
-
-                @keyframes elykiaTyping {
-                    0%, 60%, 100% {
-                        transform: scale(1);
-                        opacity: 0.5;
-                    }
-                    30% {
-                        transform: scale(1.2);
-                        opacity: 1;
-                    }
-                }
-                
-                @keyframes elykiaFadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(5px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-
-                .elykia-input-container {
-                    padding: 1rem;
-                    border-top: 1px solid #f1f5f9;
-                    background: white;
-                    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
-                }
-
-                .elykia-input-wrapper {
-                    display: flex;
-                    gap: 0.6rem;
-                    align-items: flex-end;
-                }
-
-                .elykia-message-input {
-                    flex: 1;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 18px;
-                    padding: 0.7rem 1.1rem;
-                    font-size: 0.9rem;
-                    resize: none;
-                    outline: none;
-                    transition: all 0.2s ease;
-                    font-family: inherit;
-                    background: #f8fafc;
-                }
-
-                .elykia-message-input:focus {
-                    border-color: #bae6fd;
-                    background: white;
-                    box-shadow: 0 0 0 3px rgba(186, 230, 253, 0.3);
-                }
-
-                .elykia-send-btn {
-                    width: 40px;
-                    height: 40px;
-                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%);
-                    border: none;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
-                }
-
-                .elykia-send-btn:hover:not(:disabled) {
-                    transform: scale(1.05);
-                    box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3);
-                }
-
-                .elykia-send-btn:disabled {
-                    opacity: 0.6;
-                    cursor: not-allowed;
-                }
-
-                .elykia-send-btn svg {
-                    width: 18px;
-                    height: 18px;
-                    color: white;
-                }
-
-                .elykia-input-footer {
-                    display: flex;
-                    justify-content: flex-end;
-                    margin-top: 0.4rem;
-                }
-
-                .elykia-char-count {
-                    font-size: 0.7rem;
-                    color: #94a3b8;
-                }
-
-                /* Responsive Design */
-                @media (max-width: 480px) {
-                    #elykia-chat-widget {
-                        bottom: 1rem;
-                        ${this.config.position === 'bottom-left' ? 'left: 1rem;' : 'right: 1rem;'}
-                    }
-
-                    .elykia-chat-window {
-                        width: calc(100vw - 2rem);
-                        height: calc(100vh - 120px);
-                        bottom: 60px;
-                        ${this.config.position === 'bottom-left' ? 'left: 0;' : 'right: 0;'}
-                    }
-                }
-            `;
-            document.head.appendChild(style);
+    style.textContent = `
+        /* Reset and base styles for chat widget */
+        #elykia-chat-widget {
+            all: initial !important;
+            position: fixed !important;
+            ${this.config.position === 'bottom-left' ? 'left: 1.5rem !important;' : 'right: 1.5rem !important;'}
+            bottom: 1.5rem !important;
+            z-index: 2147483647 !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+            font-size: 14px !important;
+            line-height: 1.5 !important;
+            color: #000 !important;
+            direction: ltr !important;
         }
+
+        #elykia-chat-widget *,
+        #elykia-chat-widget *::before,
+        #elykia-chat-widget *::after {
+            box-sizing: border-box !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            font: inherit !important;
+            vertical-align: baseline !important;
+            text-decoration: none !important;
+            list-style: none !important;
+            outline: none !important;
+            background: transparent !important;
+            color: inherit !important;
+        }
+
+        /* Chat toggle button */
+        #elykia-chat-widget .elykia-chat-toggle {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+            border: none !important;
+            cursor: pointer !important;
+            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            position: relative !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-toggle:hover {
+            transform: translateY(-2px) scale(1.05) !important;
+            box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45) !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-toggle svg {
+            width: 20px !important;
+            height: 20px !important;
+            color: white !important;
+            transition: all 0.3s ease !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            stroke-width: 2 !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-toggle .elykia-close-icon {
+            position: absolute !important;
+            opacity: 0 !important;
+            transform: rotate(90deg) !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-toggle.active .elykia-chat-icon {
+            opacity: 0 !important;
+            transform: rotate(-90deg) !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-toggle.active .elykia-close-icon {
+            opacity: 1 !important;
+            transform: rotate(0deg) !important;
+        }
+
+        /* Chat window */
+        #elykia-chat-widget .elykia-chat-window {
+            position: absolute !important;
+            bottom: 60px !important;
+            ${this.config.position === 'bottom-left' ? 'left: 0 !important;' : 'right: 0 !important;'}
+            width: 340px !important;
+            height: 460px !important;
+            background: white !important;
+            border-radius: 18px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            opacity: 0 !important;
+            transform: translateY(15px) scale(0.95) !important;
+            visibility: hidden !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        #elykia-chat-widget .elykia-chat-window.active {
+            opacity: 1 !important;
+            transform: translateY(0) scale(1) !important;
+            visibility: visible !important;
+        }
+
+        /* Chat header */
+        #elykia-chat-widget .elykia-chat-header {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+            padding: 1rem 1.25rem !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            color: white !important;
+            position: relative !important;
+            z-index: 10 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        #elykia-chat-widget .elykia-header-content {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.75rem !important;
+        }
+
+        #elykia-chat-widget .elykia-avatar {
+            width: 34px !important;
+            height: 34px !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        #elykia-chat-widget .elykia-avatar svg {
+            width: 16px !important;
+            height: 16px !important;
+            color: white !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            stroke-width: 1.5 !important;
+        }
+
+        #elykia-chat-widget .elykia-header-info h3 {
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 0.15rem !important;
+            letter-spacing: -0.2px !important;
+            color: white !important;
+        }
+
+        #elykia-chat-widget .elykia-status {
+            font-size: 0.75rem !important;
+            opacity: 0.9 !important;
+            font-weight: 400 !important;
+            color: white !important;
+        }
+
+        #elykia-chat-widget .elykia-minimize-btn {
+            background: none !important;
+            border: none !important;
+            color: white !important;
+            cursor: pointer !important;
+            padding: 0.4rem !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        #elykia-chat-widget .elykia-minimize-btn:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        #elykia-chat-widget .elykia-minimize-btn svg {
+            width: 18px !important;
+            height: 18px !important;
+            color: white !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            stroke-width: 2 !important;
+        }
+
+        /* Messages container */
+        #elykia-chat-widget .elykia-messages-container {
+            flex: 1 !important;
+            padding: 1.25rem !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 0.8rem !important;
+            background: #fafcff !important;
+        }
+
+        #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar {
+            width: 5px !important;
+        }
+
+        #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar-thumb {
+            background: #dbeafe !important;
+            border-radius: 3px !important;
+        }
+
+        #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar-track {
+            background: rgba(219, 234, 254, 0.3) !important;
+        }
+
+        /* Welcome message */
+        #elykia-chat-widget .elykia-welcome-message {
+            display: flex !important;
+            gap: 0.8rem !important;
+            align-items: flex-start !important;
+        }
+
+        #elykia-chat-widget .elykia-bot-avatar {
+            width: 32px !important;
+            height: 32px !important;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2) !important;
+        }
+
+        #elykia-chat-widget .elykia-bot-avatar svg {
+            width: 16px !important;
+            height: 16px !important;
+            color: white !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            stroke-width: 1.5 !important;
+        }
+
+        #elykia-chat-widget .elykia-message-content {
+            flex: 1 !important;
+        }
+
+        #elykia-chat-widget .elykia-message-content p {
+            background: white !important;
+            padding: 0.8rem 1.1rem !important;
+            border-radius: 14px 14px 14px 4px !important;
+            margin-bottom: 0.8rem !important;
+            color: #1e293b !important;
+            line-height: 1.45 !important;
+            font-size: 0.9rem !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+        }
+
+        /* Quick actions */
+        #elykia-chat-widget .elykia-quick-actions {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 0.4rem !important;
+        }
+
+        #elykia-chat-widget .elykia-quick-btn {
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 0.4rem 0.8rem !important;
+            border-radius: 16px !important;
+            font-size: 0.8rem !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            color: #334155 !important;
+            font-weight: 500 !important;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+        }
+
+        #elykia-chat-widget .elykia-quick-btn:hover {
+            border-color: #bae6fd !important;
+            background: #f0f9ff !important;
+            color: #0c4a6e !important;
+            transform: translateY(-1px) !important;
+        }
+
+        /* Message bubbles */
+        #elykia-chat-widget .elykia-message {
+            display: flex !important;
+            gap: 0.8rem !important;
+            margin-bottom: 0.8rem !important;
+            animation: elykiaFadeIn 0.3s ease-out !important;
+        }
+
+        #elykia-chat-widget .elykia-message.user {
+            flex-direction: row-reverse !important;
+        }
+
+        #elykia-chat-widget .elykia-message.user .elykia-message-bubble {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+            color: white !important;
+            border-radius: 14px 14px 4px 14px !important;
+            box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2) !important;
+        }
+
+        #elykia-chat-widget .elykia-message.bot .elykia-message-bubble {
+            background: white !important;
+            color: #1e293b !important;
+            border-radius: 14px 14px 14px 4px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+        }
+
+        #elykia-chat-widget .elykia-message-bubble {
+            max-width: 80% !important;
+            padding: 0.8rem 1.1rem !important;
+            line-height: 1.45 !important;
+            font-size: 0.9rem !important;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Typing indicator */
+        #elykia-chat-widget .elykia-typing-indicator {
+            display: flex !important;
+            align-items: center !important;
+            gap: 0.8rem !important;
+            padding: 0 1.25rem 0.8rem !important;
+            color: #64748b !important;
+            font-size: 0.8rem !important;
+        }
+
+        #elykia-chat-widget .elykia-typing-dots {
+            display: flex !important;
+            gap: 4px !important;
+        }
+
+        #elykia-chat-widget .elykia-typing-dots span {
+            width: 5px !important;
+            height: 5px !important;
+            background: #94a3b8 !important;
+            border-radius: 50% !important;
+            animation: elykiaTyping 1.4s infinite !important;
+        }
+
+        #elykia-chat-widget .elykia-typing-dots span:nth-child(2) {
+            animation-delay: 0.2s !important;
+        }
+
+        #elykia-chat-widget .elykia-typing-dots span:nth-child(3) {
+            animation-delay: 0.4s !important;
+        }
+
+        /* Input container */
+        #elykia-chat-widget .elykia-input-container {
+            padding: 1rem !important;
+            border-top: 1px solid #f1f5f9 !important;
+            background: white !important;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02) !important;
+        }
+
+        #elykia-chat-widget .elykia-input-wrapper {
+            display: flex !important;
+            gap: 0.6rem !important;
+            align-items: flex-end !important;
+        }
+
+        #elykia-chat-widget .elykia-message-input {
+            flex: 1 !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 18px !important;
+            padding: 0.7rem 1.1rem !important;
+            font-size: 0.9rem !important;
+            resize: none !important;
+            outline: none !important;
+            transition: all 0.2s ease !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+            background: #f8fafc !important;
+            color: #1e293b !important;
+        }
+
+        #elykia-chat-widget .elykia-message-input:focus {
+            border-color: #bae6fd !important;
+            background: white !important;
+            box-shadow: 0 0 0 3px rgba(186, 230, 253, 0.3) !important;
+        }
+
+        #elykia-chat-widget .elykia-message-input::placeholder {
+            color: #94a3b8 !important;
+        }
+
+        #elykia-chat-widget .elykia-send-btn {
+            width: 40px !important;
+            height: 40px !important;
+            background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+            border: none !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: all 0.2s ease !important;
+        }
+
+        #elykia-chat-widget .elykia-send-btn:hover:not(:disabled) {
+            transform: scale(1.05) !important;
+            box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3) !important;
+        }
+
+        #elykia-chat-widget .elykia-send-btn:disabled {
+            opacity: 0.6 !important;
+            cursor: not-allowed !important;
+        }
+
+        #elykia-chat-widget .elykia-send-btn svg {
+            width: 18px !important;
+            height: 18px !important;
+            color: white !important;
+            fill: none !important;
+            stroke: currentColor !important;
+            stroke-width: 1.8 !important;
+        }
+
+        #elykia-chat-widget .elykia-input-footer {
+            display: flex !important;
+            justify-content: flex-end !important;
+            margin-top: 0.4rem !important;
+        }
+
+        #elykia-chat-widget .elykia-char-count {
+            font-size: 0.7rem !important;
+            color: #94a3b8 !important;
+        }
+
+        /* Animations */
+        @keyframes elykiaTyping {
+            0%, 60%, 100% {
+                transform: scale(1) !important;
+                opacity: 0.5 !important;
+            }
+            30% {
+                transform: scale(1.2) !important;
+                opacity: 1 !important;
+            }
+        }
+        
+        @keyframes elykiaFadeIn {
+            from {
+                opacity: 0 !important;
+                transform: translateY(5px) !important;
+            }
+            to {
+                opacity: 1 !important;
+                transform: translateY(0) !important;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            #elykia-chat-widget {
+                bottom: 1rem !important;
+                ${this.config.position === 'bottom-left' ? 'left: 1rem !important;' : 'right: 1rem !important;'}
+            }
+
+            #elykia-chat-widget .elykia-chat-window {
+                width: calc(100vw - 2rem) !important;
+                height: calc(100vh - 120px) !important;
+                bottom: 60px !important;
+                ${this.config.position === 'bottom-left' ? 'left: 0 !important;' : 'right: 0 !important;'}
+            }
+        }
+    `;
+    
+    document.head.appendChild(style);
+}
 
         createWidget() {
             // Remove existing widget if any
