@@ -32,13 +32,13 @@
             if (this.isInitialized) return;
             this.isInitialized = true;
             
-            this.loadExternalCSS();
+            this.injectStyles();
             this.createWidget();
             this.bindEvents();
         }
 
-        loadExternalCSS() {
-            // Check if CSS is already loaded
+        injectStyles() {
+            // Check if styles are already injected
             if (document.getElementById('elykia-chat-styles')) {
                 return;
             }
@@ -51,47 +51,467 @@
                 document.head.appendChild(fontLink);
             }
 
-            // Load widget CSS
-            const cssLink = document.createElement('link');
-            cssLink.id = 'elykia-chat-styles';
-            cssLink.rel = 'stylesheet';
-            cssLink.type = 'text/css';
-            // cssLink.href = this.config.apiUrl + '/public/integrations/web/widget.css';
-            cssLink.href = 'https://cdn.jsdelivr.net/gh/juli2kapo/TestBundle/widget.css';
-            // Add error handling for CSS loading
-            cssLink.onerror = () => {
-                console.warn('Failed to load Elykia Chat CSS from external file, falling back to inline styles');
-                this.injectFallbackStyles();
-            };
-            
-            document.head.appendChild(cssLink);
-        }
-
-        injectFallbackStyles() {
-            // Fallback inline styles if external CSS fails to load
+            // Inject comprehensive styles
             const style = document.createElement('style');
-            style.id = 'elykia-chat-fallback-styles';
+            style.id = 'elykia-chat-styles';
             style.textContent = `
+                /* Reset and base styles for chat widget */
                 #elykia-chat-widget {
+                    all: initial !important;
                     position: fixed !important;
+                    ${this.config.position === 'bottom-left' ? 'left: 1.5rem !important;' : 'right: 1.5rem !important;'}
                     bottom: 1.5rem !important;
                     z-index: 2147483647 !important;
-                    font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+                    font-size: 14px !important;
+                    line-height: 1.5 !important;
+                    color: #000 !important;
+                    direction: ltr !important;
                 }
-                #elykia-chat-widget.position-bottom-left { left: 1.5rem !important; }
-                #elykia-chat-widget.position-bottom-right { right: 1.5rem !important; }
+
+                #elykia-chat-widget *,
+                #elykia-chat-widget *::before,
+                #elykia-chat-widget *::after {
+                    box-sizing: border-box !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    border: 0 !important;
+                    font: inherit !important;
+                    vertical-align: baseline !important;
+                    text-decoration: none !important;
+                    list-style: none !important;
+                    outline: none !important;
+                    background: transparent !important;
+                    color: inherit !important;
+                }
+
+                /* Chat toggle button */
                 #elykia-chat-widget .elykia-chat-toggle {
-                    width: 48px !important; height: 48px !important; border-radius: 50% !important;
-                    background: #0ea5e9 !important; border: none !important; cursor: pointer !important;
-                    display: flex !important; align-items: center !important; justify-content: center !important;
+                    width: 48px !important;
+                    height: 48px !important;
+                    border-radius: 50% !important;
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+                    border: none !important;
+                    cursor: pointer !important;
+                    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    position: relative !important;
                 }
+
+                #elykia-chat-widget .elykia-chat-toggle:hover {
+                    transform: translateY(-2px) scale(1.05) !important;
+                    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.45) !important;
+                }
+
+                #elykia-chat-widget .elykia-chat-toggle svg {
+                    width: 20px !important;
+                    height: 20px !important;
+                    color: white !important;
+                    transition: all 0.3s ease !important;
+                    fill: none !important;
+                    stroke: currentColor !important;
+                    stroke-width: 2 !important;
+                }
+
+                #elykia-chat-widget .elykia-chat-toggle .elykia-close-icon {
+                    position: absolute !important;
+                    opacity: 0 !important;
+                    transform: rotate(90deg) !important;
+                }
+
+                #elykia-chat-widget .elykia-chat-toggle.active .elykia-chat-icon {
+                    opacity: 0 !important;
+                    transform: rotate(-90deg) !important;
+                }
+
+                #elykia-chat-widget .elykia-chat-toggle.active .elykia-close-icon {
+                    opacity: 1 !important;
+                    transform: rotate(0deg) !important;
+                }
+
+                /* Chat window */
                 #elykia-chat-widget .elykia-chat-window {
-                    position: absolute !important; bottom: 60px !important; width: 340px !important; height: 460px !important;
-                    background: white !important; border-radius: 18px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-                    display: flex !important; flex-direction: column !important; opacity: 0 !important; visibility: hidden !important;
+                    position: absolute !important;
+                    bottom: 60px !important;
+                    ${this.config.position === 'bottom-left' ? 'left: 0 !important;' : 'right: 0 !important;'}
+                    width: 340px !important;
+                    height: 460px !important;
+                    background: white !important;
+                    border-radius: 18px !important;
+                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    overflow: hidden !important;
+                    opacity: 0 !important;
+                    transform: translateY(15px) scale(0.95) !important;
+                    visibility: hidden !important;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
                 }
-                #elykia-chat-widget .elykia-chat-window.active { opacity: 1 !important; visibility: visible !important; }
+
+                #elykia-chat-widget .elykia-chat-window.active {
+                    opacity: 1 !important;
+                    transform: translateY(0) scale(1) !important;
+                    visibility: visible !important;
+                }
+
+                /* Chat header */
+                #elykia-chat-widget .elykia-chat-header {
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+                    padding: 1rem 1.25rem !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                    color: white !important;
+                    position: relative !important;
+                    z-index: 10 !important;
+                    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+                }
+
+                #elykia-chat-widget .elykia-header-content {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 0.75rem !important;
+                }
+
+                #elykia-chat-widget .elykia-avatar {
+                    width: 34px !important;
+                    height: 34px !important;
+                    background: rgba(255, 255, 255, 0.2) !important;
+                    border-radius: 50% !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+
+                #elykia-chat-widget .elykia-avatar svg {
+                    width: 16px !important;
+                    height: 16px !important;
+                    color: white !important;
+                    fill: none !important;
+                    stroke: currentColor !important;
+                    stroke-width: 1.5 !important;
+                }
+
+                #elykia-chat-widget .elykia-header-info h3 {
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    margin-bottom: 0.15rem !important;
+                    letter-spacing: -0.2px !important;
+                    color: white !important;
+                }
+
+                #elykia-chat-widget .elykia-status {
+                    font-size: 0.75rem !important;
+                    opacity: 0.9 !important;
+                    font-weight: 400 !important;
+                    color: white !important;
+                }
+
+                #elykia-chat-widget .elykia-minimize-btn {
+                    background: none !important;
+                    border: none !important;
+                    color: white !important;
+                    cursor: pointer !important;
+                    padding: 0.4rem !important;
+                    border-radius: 8px !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                #elykia-chat-widget .elykia-minimize-btn:hover {
+                    background: rgba(255, 255, 255, 0.15) !important;
+                }
+
+                #elykia-chat-widget .elykia-minimize-btn svg {
+                    width: 18px !important;
+                    height: 18px !important;
+                    color: white !important;
+                    fill: none !important;
+                    stroke: currentColor !important;
+                    stroke-width: 2 !important;
+                }
+
+                /* Messages container */
+                #elykia-chat-widget .elykia-messages-container {
+                    flex: 1 !important;
+                    padding: 1.25rem !important;
+                    overflow-y: auto !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    gap: 0.8rem !important;
+                    background: #fafcff !important;
+                }
+
+                #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar {
+                    width: 5px !important;
+                }
+
+                #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar-thumb {
+                    background: #dbeafe !important;
+                    border-radius: 3px !important;
+                }
+
+                #elykia-chat-widget .elykia-messages-container::-webkit-scrollbar-track {
+                    background: rgba(219, 234, 254, 0.3) !important;
+                }
+
+                /* Welcome message */
+                #elykia-chat-widget .elykia-welcome-message {
+                    display: flex !important;
+                    gap: 0.8rem !important;
+                    align-items: flex-start !important;
+                }
+
+                #elykia-chat-widget .elykia-bot-avatar {
+                    width: 32px !important;
+                    height: 32px !important;
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+                    border-radius: 50% !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    flex-shrink: 0 !important;
+                    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2) !important;
+                }
+
+                #elykia-chat-widget .elykia-bot-avatar svg {
+                    width: 16px !important;
+                    height: 16px !important;
+                    color: white !important;
+                    fill: none !important;
+                    stroke: currentColor !important;
+                    stroke-width: 1.5 !important;
+                }
+
+                #elykia-chat-widget .elykia-message-content {
+                    flex: 1 !important;
+                }
+
+                #elykia-chat-widget .elykia-message-content p {
+                    background: white !important;
+                    padding: 0.8rem 1.1rem !important;
+                    border-radius: 14px 14px 14px 4px !important;
+                    margin-bottom: 0.8rem !important;
+                    color: #1e293b !important;
+                    line-height: 1.45 !important;
+                    font-size: 0.9rem !important;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+                }
+
+                /* Quick actions */
+                #elykia-chat-widget .elykia-quick-actions {
+                    display: flex !important;
+                    flex-wrap: wrap !important;
+                    gap: 0.4rem !important;
+                }
+
+                #elykia-chat-widget .elykia-quick-btn {
+                    background: white !important;
+                    border: 1px solid #e2e8f0 !important;
+                    padding: 0.4rem 0.8rem !important;
+                    border-radius: 16px !important;
+                    font-size: 0.8rem !important;
+                    cursor: pointer !important;
+                    transition: all 0.2s ease !important;
+                    color: #334155 !important;
+                    font-weight: 500 !important;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+                }
+
+                #elykia-chat-widget .elykia-quick-btn:hover {
+                    border-color: #bae6fd !important;
+                    background: #f0f9ff !important;
+                    color: #0c4a6e !important;
+                    transform: translateY(-1px) !important;
+                }
+
+                /* Message bubbles */
+                #elykia-chat-widget .elykia-message {
+                    display: flex !important;
+                    gap: 0.8rem !important;
+                    margin-bottom: 0.8rem !important;
+                    animation: elykiaFadeIn 0.3s ease-out !important;
+                }
+
+                #elykia-chat-widget .elykia-message.user {
+                    flex-direction: row-reverse !important;
+                }
+
+                #elykia-chat-widget .elykia-message.user .elykia-message-bubble {
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+                    color: white !important;
+                    border-radius: 14px 14px 4px 14px !important;
+                    box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2) !important;
+                }
+
+                #elykia-chat-widget .elykia-message.bot .elykia-message-bubble {
+                    background: white !important;
+                    color: #1e293b !important;
+                    border-radius: 14px 14px 14px 4px !important;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03) !important;
+                }
+
+                #elykia-chat-widget .elykia-message-bubble {
+                    max-width: 80% !important;
+                    padding: 0.8rem 1.1rem !important;
+                    line-height: 1.45 !important;
+                    font-size: 0.9rem !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                /* Typing indicator */
+                #elykia-chat-widget .elykia-typing-indicator {
+                    display: flex !important;
+                    align-items: center !important;
+                    gap: 0.8rem !important;
+                    padding: 0 1.25rem 0.8rem !important;
+                    color: #64748b !important;
+                    font-size: 0.8rem !important;
+                }
+
+                #elykia-chat-widget .elykia-typing-dots {
+                    display: flex !important;
+                    gap: 4px !important;
+                }
+
+                #elykia-chat-widget .elykia-typing-dots span {
+                    width: 5px !important;
+                    height: 5px !important;
+                    background: #94a3b8 !important;
+                    border-radius: 50% !important;
+                    animation: elykiaTyping 1.4s infinite !important;
+                }
+
+                #elykia-chat-widget .elykia-typing-dots span:nth-child(2) {
+                    animation-delay: 0.2s !important;
+                }
+
+                #elykia-chat-widget .elykia-typing-dots span:nth-child(3) {
+                    animation-delay: 0.4s !important;
+                }
+
+                /* Input container */
+                #elykia-chat-widget .elykia-input-container {
+                    padding: 1rem !important;
+                    border-top: 1px solid #f1f5f9 !important;
+                    background: white !important;
+                    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02) !important;
+                }
+
+                #elykia-chat-widget .elykia-input-wrapper {
+                    display: flex !important;
+                    gap: 0.6rem !important;
+                    align-items: flex-end !important;
+                }
+
+                #elykia-chat-widget .elykia-message-input {
+                    flex: 1 !important;
+                    border: 1px solid #e2e8f0 !important;
+                    border-radius: 18px !important;
+                    padding: 0.7rem 1.1rem !important;
+                    font-size: 0.9rem !important;
+                    resize: none !important;
+                    outline: none !important;
+                    transition: all 0.2s ease !important;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+                    background: #f8fafc !important;
+                    color: #1e293b !important;
+                }
+
+                #elykia-chat-widget .elykia-message-input:focus {
+                    border-color: #bae6fd !important;
+                    background: white !important;
+                    box-shadow: 0 0 0 3px rgba(186, 230, 253, 0.3) !important;
+                }
+
+                #elykia-chat-widget .elykia-message-input::placeholder {
+                    color: #94a3b8 !important;
+                }
+
+                #elykia-chat-widget .elykia-send-btn {
+                    width: 40px !important;
+                    height: 40px !important;
+                    background: linear-gradient(135deg, #0ea5e9 0%, #0d9488 100%) !important;
+                    border: none !important;
+                    border-radius: 50% !important;
+                    cursor: pointer !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    transition: all 0.2s ease !important;
+                }
+
+                #elykia-chat-widget .elykia-send-btn:hover:not(:disabled) {
+                    transform: scale(1.05) !important;
+                    box-shadow: 0 3px 8px rgba(14, 165, 233, 0.3) !important;
+                }
+
+                #elykia-chat-widget .elykia-send-btn:disabled {
+                    opacity: 0.6 !important;
+                    cursor: not-allowed !important;
+                }
+
+                #elykia-chat-widget .elykia-send-btn svg {
+                    width: 18px !important;
+                    height: 18px !important;
+                    color: white !important;
+                    fill: none !important;
+                    stroke: currentColor !important;
+                    stroke-width: 1.8 !important;
+                }
+
+                #elykia-chat-widget .elykia-input-footer {
+                    display: flex !important;
+                    justify-content: flex-end !important;
+                    margin-top: 0.4rem !important;
+                }
+
+                #elykia-chat-widget .elykia-char-count {
+                    font-size: 0.7rem !important;
+                    color: #94a3b8 !important;
+                }
+
+                /* Animations */
+                @keyframes elykiaTyping {
+                    0%, 60%, 100% {
+                        transform: scale(1) !important;
+                        opacity: 0.5 !important;
+                    }
+                    30% {
+                        transform: scale(1.2) !important;
+                        opacity: 1 !important;
+                    }
+                }
+                
+                @keyframes elykiaFadeIn {
+                    from {
+                        opacity: 0 !important;
+                        transform: translateY(5px) !important;
+                    }
+                    to {
+                        opacity: 1 !important;
+                        transform: translateY(0) !important;
+                    }
+                }
+
+                /* Responsive Design */
+                @media (max-width: 480px) {
+                    #elykia-chat-widget {
+                        bottom: 1rem !important;
+                        ${this.config.position === 'bottom-left' ? 'left: 1rem !important;' : 'right: 1rem !important;'}
+                    }
+
+                    #elykia-chat-widget .elykia-chat-window {
+                        width: calc(100vw - 2rem) !important;
+                        height: calc(100vh - 120px) !important;
+                        bottom: 60px !important;
+                        ${this.config.position === 'bottom-left' ? 'left: 0 !important;' : 'right: 0 !important;'}
+                    }
+                }
             `;
+            
             document.head.appendChild(style);
         }
 
@@ -104,7 +524,6 @@
 
             const widget = document.createElement('div');
             widget.id = 'elykia-chat-widget';
-            widget.className = `position-${this.config.position}`;
             widget.innerHTML = `
                 <button class="elykia-chat-toggle">
                     <svg class="elykia-chat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -193,7 +612,6 @@
             this.charCount = widget.querySelector('.elykia-char-count');
         }
 
-        // ... rest of the methods remain the same as before ...
         bindEvents() {
             // Toggle chat window
             this.chatToggle.addEventListener('click', () => this.toggleChat());
